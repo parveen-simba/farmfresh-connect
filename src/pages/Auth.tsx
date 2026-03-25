@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { loginUser, registerUser, setCurrentUser } from "@/lib/store";
+import { useAuth } from "@/hooks/useAuth";
 import { Sprout, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,33 +10,40 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const role = (searchParams.get("role") as "farmer" | "buyer") || "buyer";
   const navigate = useNavigate();
+  const { signUp, signIn } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isRegister) {
-      if (!name.trim() || !phone.trim()) {
-        toast.error("Please fill all fields");
-        return;
+    setSubmitting(true);
+    try {
+      if (isRegister) {
+        if (!name.trim() || !email.trim() || !password.trim()) {
+          toast.error("Please fill all fields");
+          return;
+        }
+        await signUp(email, password, { name, role, phone });
+        toast.success("Account created! Welcome to AgriLink 🌾");
+        // Small delay for profile creation trigger
+        setTimeout(() => navigate(role === "farmer" ? "/farmer" : "/marketplace"), 500);
+      } else {
+        if (!email.trim() || !password.trim()) {
+          toast.error("Enter your email and password");
+          return;
+        }
+        await signIn(email, password);
+        toast.success("Welcome back! 🌾");
+        navigate(role === "farmer" ? "/farmer" : "/marketplace");
       }
-      const user = registerUser({ name, phone, role });
-      setCurrentUser(user);
-      toast.success(`Welcome, ${user.name}!`);
-      navigate(role === "farmer" ? "/farmer" : "/marketplace");
-    } else {
-      if (!phone.trim()) {
-        toast.error("Enter your phone number");
-        return;
-      }
-      const user = loginUser(phone, role);
-      if (!user) {
-        toast.error("User not found. Please register first.");
-        return;
-      }
-      toast.success(`Welcome back, ${user.name}!`);
-      navigate(role === "farmer" ? "/farmer" : "/marketplace");
+    } catch (err: any) {
+      toast.error(err.message || "Authentication failed");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -59,25 +66,42 @@ const Auth = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {isRegister && (
-            <Input
-              placeholder="Your Name / आपका नाम"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-12 rounded-xl text-base"
-            />
+            <>
+              <Input
+                placeholder="Your Name / आपका नाम"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-12 rounded-xl text-base"
+              />
+              <Input
+                placeholder="Phone Number (optional)"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="h-12 rounded-xl text-base"
+                type="tel"
+              />
+            </>
           )}
           <Input
-            placeholder="Phone Number / फोन नंबर"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="h-12 rounded-xl text-base"
-            type="tel"
+            type="email"
+          />
+          <Input
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="h-12 rounded-xl text-base"
+            type="password"
           />
           <Button
             type="submit"
+            disabled={submitting}
             className={`w-full h-12 rounded-xl text-base font-semibold ${isFarmer ? "bg-hero-gradient text-primary-foreground" : "bg-warm-gradient text-secondary-foreground"}`}
           >
-            {isRegister ? "Register" : "Login"}
+            {submitting ? "Please wait..." : isRegister ? "Register" : "Login"}
           </Button>
         </form>
 
