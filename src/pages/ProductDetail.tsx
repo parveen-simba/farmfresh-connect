@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getProductById, getCurrentUser, createOrder, getReviewsForFarmer, addReview, getAverageRating } from "@/lib/store";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, getCategoryEmoji, freshnessLabel } from "@/lib/helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,67 +13,80 @@ import { motion } from "framer-motion";
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const user = getCurrentUser();
-  const product = getProductById(id || "");
+  const { user, profile } = useAuth();
+  const [product, setProduct] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [qty, setQty] = useState("1");
   const [showQR, setShowQR] = useState(false);
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
-  const [, setRefresh] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  if (!product) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground">Product not found</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (id) fetchProduct();
+  }, [id]);
 
-  const freshness = freshnessLabel(product.harvestDate);
-  const reviews = getReviewsForFarmer(product.farmerId);
-  const avgRating = getAverageRating(product.farmerId);
-  const isBuyer = user?.role === "buyer";
-
-  const handleOrder = () => {
-    if (!user) { navigate("/auth?role=buyer"); return; }
-    const q = Number(qty);
-    if (q <= 0 || q > product.quantity) {
-      toast.error("Invalid quantity");
-      return;
+  const fetchProduct = async () => {
+    setLoading(true);
+    const [prodRes, revRes] = await Promise.all([
+      supabase.from("products").select("*").eq("id", id!).single(),
+      supabase.from("reviews").select("*").eq("farmer_id", "placeholder").order("created_at", { ascending: false }),
+    ]);
+    if (prodRes.data) {
+      setProduct(prodRes.data);
+      // Now fetch reviews for this farmer
+      const { data: revData } = await supabase.from("reviews").select("*").eq("farmer_id", prodRes.data.farmer_id).order("created_at", { ascending: false });
+      setReviews(revData || []);
     }
-    createOrder({
-      productId: product.id,
-      productName: product.name,
-      farmerId: product.farmerId,
-      farmerName: product.farmerName,
-      buyerId: user.id,
-      buyerName: user.name,
-      quantity: q,
-      totalPrice: q * product.price,
-    });
-    toast.success("Order placed! 🎉");
-    navigate(user.role === "buyer" ? "/marketplace" : "/farmer");
+    setLoading(false);
   };
 
-  const handleReview = () => {
-    if (!user || !reviewText.trim()) return;
-    addReview({
-      farmerId: product.farmerId,
-      buyerId: user.id,
-      buyerName: user.name,
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><p className="text-muted-foreground">Loading...</p></div>;
+  if (!product) return <div className="min-h-screen flex items-center justify-center bg-background"><p className="text-muted-foreground">Product not found</p></div>;
+
+  const freshness = freshnessLabel(product.harvest_date);
+  const avgRating = reviews.length > 0 ? reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length : 0;
+  const isBuyer = profile?.role === "buyer";
+
+  const handleOrder = async () => {
+    if (!user || !profile) { navigate("/auth?role=buyer"); return; }
+    const q = Number(qty);
+    if (q <= 0 || q > product.quantity) { toast.error("Invalid quantity"); return; }
+    const { error } = await supabase.from("orders").insert({
+      product_id: product.id,
+      product_name: product.name,
+      farmer_id: product.farmer_id,
+      farmer_name: product.farmer_name,
+      buyer_id: user.id,
+      buyer_name: profile.name,
+      quantity: q,
+      total_price: q * product.price,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Order placed! 🎉");
+    navigate("/marketplace");
+  };
+
+  const handleReview = async () => {
+    if (!user || !profile || !reviewText.trim()) return;
+    const { error } = await supabase.from("reviews").insert({
+      farmer_id: product.farmer_id,
+      buyer_id: user.id,
+      buyer_name: profile.name,
       rating: reviewRating,
       comment: reviewText,
     });
+    if (error) { toast.error(error.message); return; }
     setReviewText("");
     toast.success("Review posted!");
-    setRefresh((r) => r + 1);
+    fetchProduct();
   };
 
   const qrData = JSON.stringify({
     product: product.name,
-    farmer: product.farmerName,
-    location: product.location.address,
-    harvestDate: product.harvestDate,
+    farmer: product.farmer_name,
+    location: product.location_address,
+    harvestDate: product.harvest_date,
     price: `₹${product.price}/${product.unit}`,
   });
 
@@ -85,21 +99,19 @@ const ProductDetail = () => {
       </div>
 
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="px-4">
-        {/* Product header */}
         <div className="bg-card rounded-2xl p-6 shadow-sm text-center mb-4">
           <div className="text-6xl mb-3">{getCategoryEmoji(product.category)}</div>
           <h1 className="text-2xl font-bold text-foreground">{product.name}</h1>
-          {product.nameHi && <p className="text-muted-foreground">{product.nameHi}</p>}
+          {product.name_hi && <p className="text-muted-foreground">{product.name_hi}</p>}
           <p className="text-3xl font-extrabold text-primary mt-2">{formatPrice(product.price)}<span className="text-base text-muted-foreground font-normal">/{product.unit}</span></p>
           <p className={`text-sm mt-2 ${freshness.color}`}>{freshness.label}</p>
         </div>
 
-        {/* Details */}
         <div className="bg-card rounded-2xl p-4 shadow-sm space-y-3 mb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center text-lg">👨‍🌾</div>
             <div>
-              <p className="font-semibold text-foreground">{product.farmerName}</p>
+              <p className="font-semibold text-foreground">{product.farmer_name}</p>
               <div className="flex items-center gap-1">
                 {avgRating > 0 && (
                   <>
@@ -112,15 +124,14 @@ const ProductDetail = () => {
           </div>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center"><MapPin className="w-5 h-5 text-accent-foreground" /></div>
-            <p className="text-sm text-muted-foreground">{product.location.address}</p>
+            <p className="text-sm text-muted-foreground">{product.location_address || "India"}</p>
           </div>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>Available: {product.quantity} {product.unit}</span>
-            <span>Harvested: {new Date(product.harvestDate).toLocaleDateString("en-IN")}</span>
+            <span>Harvested: {new Date(product.harvest_date).toLocaleDateString("en-IN")}</span>
           </div>
         </div>
 
-        {/* QR Code */}
         <button onClick={() => setShowQR(!showQR)} className="w-full bg-card rounded-2xl p-4 shadow-sm flex items-center gap-3 mb-4">
           <QrCode className="w-5 h-5 text-primary" />
           <span className="font-medium text-foreground">Product Traceability QR</span>
@@ -132,7 +143,6 @@ const ProductDetail = () => {
           </motion.div>
         )}
 
-        {/* Order */}
         {isBuyer && (
           <div className="bg-card rounded-2xl p-4 shadow-sm mb-4">
             <label className="text-sm font-medium text-foreground mb-2 block">Order Quantity ({product.unit})</label>
@@ -145,7 +155,6 @@ const ProductDetail = () => {
           </div>
         )}
 
-        {/* Reviews */}
         <div className="bg-card rounded-2xl p-4 shadow-sm">
           <h3 className="font-semibold text-foreground mb-3">Reviews</h3>
           {isBuyer && (
@@ -164,10 +173,10 @@ const ProductDetail = () => {
             </div>
           )}
           {reviews.length === 0 && <p className="text-sm text-muted-foreground">No reviews yet</p>}
-          {reviews.map((r) => (
+          {reviews.map((r: any) => (
             <div key={r.id} className="border-t border-border pt-3 mt-3">
               <div className="flex items-center gap-2">
-                <p className="font-medium text-foreground text-sm">{r.buyerName}</p>
+                <p className="font-medium text-foreground text-sm">{r.buyer_name}</p>
                 <div className="flex">
                   {Array.from({ length: r.rating }).map((_, i) => (
                     <Star key={i} className="w-3 h-3 text-secondary fill-secondary" />

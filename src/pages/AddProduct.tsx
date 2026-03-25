@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCurrentUser, addProduct } from "@/lib/store";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft } from "lucide-react";
@@ -17,40 +18,51 @@ const categories = [
 
 const AddProduct = () => {
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const { user, profile, loading } = useAuth();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [quantity, setQuantity] = useState("");
   const [unit, setUnit] = useState("kg");
   const [category, setCategory] = useState<string>("vegetables");
   const [harvestDate, setHarvestDate] = useState(new Date().toISOString().split("T")[0]);
+  const [submitting, setSubmitting] = useState(false);
 
-  if (!user || user.role !== "farmer") {
-    navigate("/auth?role=farmer");
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && (!user || profile?.role !== "farmer")) {
+      navigate("/auth?role=farmer");
+    }
+  }, [loading, user, profile]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !price || !quantity) {
+    if (!name || !price || !quantity || !user || !profile) {
       toast.error("Please fill all required fields");
       return;
     }
-    addProduct({
-      farmerId: user.id,
-      farmerName: user.name,
+    setSubmitting(true);
+    const { error } = await supabase.from("products").insert({
+      farmer_id: user.id,
+      farmer_name: profile.name,
       name,
       price: Number(price),
       quantity: Number(quantity),
       unit,
-      image: "",
-      harvestDate,
-      location: user.location || { lat: 28.6139, lng: 77.209, address: "Delhi" },
-      category: category as any,
+      harvest_date: harvestDate,
+      location_lat: profile.location_lat,
+      location_lng: profile.location_lng,
+      location_address: profile.location_address || "India",
+      category,
     });
+    setSubmitting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Product added! ✅");
     navigate("/farmer");
   };
+
+  if (loading || !profile) return null;
 
   return (
     <div className="min-h-screen bg-background px-4 py-6">
@@ -71,12 +83,7 @@ const AddProduct = () => {
           <label className="text-sm font-medium text-foreground mb-2 block">Category</label>
           <div className="grid grid-cols-3 gap-2">
             {categories.map((c) => (
-              <button
-                key={c.value}
-                type="button"
-                onClick={() => setCategory(c.value)}
-                className={`py-3 rounded-xl text-sm font-medium transition-all ${category === c.value ? "bg-accent text-accent-foreground ring-2 ring-primary" : "bg-card text-muted-foreground"}`}
-              >
+              <button key={c.value} type="button" onClick={() => setCategory(c.value)} className={`py-3 rounded-xl text-sm font-medium transition-all ${category === c.value ? "bg-accent text-accent-foreground ring-2 ring-primary" : "bg-card text-muted-foreground"}`}>
                 {c.label}
               </button>
             ))}
@@ -111,8 +118,8 @@ const AddProduct = () => {
           </div>
         </div>
 
-        <Button type="submit" className="w-full h-14 rounded-xl text-base font-semibold bg-hero-gradient text-primary-foreground shadow-glow mt-4">
-          Add Product ✅
+        <Button type="submit" disabled={submitting} className="w-full h-14 rounded-xl text-base font-semibold bg-hero-gradient text-primary-foreground shadow-glow mt-4">
+          {submitting ? "Adding..." : "Add Product ✅"}
         </Button>
       </form>
     </div>
