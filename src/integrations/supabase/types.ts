@@ -14,7 +14,182 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      orders: {
+        Row: {
+          buyer_id: string
+          buyer_name: string
+          created_at: string
+          farmer_id: string
+          farmer_name: string
+          id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          status: string
+          total_price: number
+        }
+        Insert: {
+          buyer_id: string
+          buyer_name: string
+          created_at?: string
+          farmer_id: string
+          farmer_name: string
+          id?: string
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          status?: string
+          total_price: number
+        }
+        Update: {
+          buyer_id?: string
+          buyer_name?: string
+          created_at?: string
+          farmer_id?: string
+          farmer_name?: string
+          id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          status?: string
+          total_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string
+          created_at: string
+          farmer_id: string
+          farmer_name: string
+          harvest_date: string
+          id: string
+          image_url: string | null
+          location_address: string | null
+          location_lat: number | null
+          location_lng: number | null
+          name: string
+          name_hi: string | null
+          price: number
+          quantity: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          farmer_id: string
+          farmer_name: string
+          harvest_date: string
+          id?: string
+          image_url?: string | null
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          name: string
+          name_hi?: string | null
+          price: number
+          quantity: number
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          farmer_id?: string
+          farmer_name?: string
+          harvest_date?: string
+          id?: string
+          image_url?: string | null
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          name?: string
+          name_hi?: string | null
+          price?: number
+          quantity?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          location_address: string | null
+          location_lat: number | null
+          location_lng: number | null
+          name: string
+          phone: string | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          name: string
+          phone?: string | null
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          name?: string
+          phone?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          buyer_id: string
+          buyer_name: string
+          comment: string | null
+          created_at: string
+          farmer_id: string
+          id: string
+          rating: number
+        }
+        Insert: {
+          buyer_id: string
+          buyer_name: string
+          comment?: string | null
+          created_at?: string
+          farmer_id: string
+          id?: string
+          rating: number
+        }
+        Update: {
+          buyer_id?: string
+          buyer_name?: string
+          comment?: string | null
+          created_at?: string
+          farmer_id?: string
+          id?: string
+          rating?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
