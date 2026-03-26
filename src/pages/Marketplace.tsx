@@ -21,10 +21,10 @@ const Marketplace = () => {
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && (!user || profile?.role !== "buyer")) {
+    if (!loading && !user) {
       navigate("/auth?role=buyer");
     }
-  }, [loading, user, profile]);
+  }, [loading, user]);
 
   useEffect(() => {
     if (user) fetchData();

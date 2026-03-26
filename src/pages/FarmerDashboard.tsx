@@ -17,10 +17,10 @@ const FarmerDashboard = () => {
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && (!user || profile?.role !== "farmer")) {
+    if (!loading && !user) {
       navigate("/auth?role=farmer");
     }
-  }, [loading, user, profile]);
+  }, [loading, user]);
 
   useEffect(() => {
     if (user) fetchData();

@@ -28,10 +28,10 @@ const AddProduct = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && (!user || profile?.role !== "farmer")) {
+    if (!loading && !user) {
       navigate("/auth?role=farmer");
     }
-  }, [loading, user, profile]);
+  }, [loading, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
