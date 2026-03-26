@@ -29,8 +29,6 @@ const Auth = () => {
         }
         await signUp(email, password, { name, role, phone });
         toast.success("Account created! Welcome to AgriLink 🌾");
-        // Small delay for profile creation trigger
-        setTimeout(() => navigate(role === "farmer" ? "/farmer" : "/marketplace"), 500);
       } else {
         if (!email.trim() || !password.trim()) {
           toast.error("Enter your email and password");
@@ -38,7 +36,6 @@ const Auth = () => {
         }
         await signIn(email, password);
         toast.success("Welcome back! 🌾");
-        navigate(role === "farmer" ? "/farmer" : "/marketplace");
       }
     } catch (err: any) {
       toast.error(err.message || "Authentication failed");
