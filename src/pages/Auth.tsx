@@ -18,6 +18,13 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Redirect when profile is ready (after signup or if already logged in)
+  useEffect(() => {
+    if (user && profile) {
+      navigate(profile.role === "farmer" ? "/farmer" : "/marketplace");
+    }
+  }, [user, profile, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
