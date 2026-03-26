@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +10,20 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const role = (searchParams.get("role") as "farmer" | "buyer") || "buyer";
   const navigate = useNavigate();
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn, profile, user } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Redirect when profile is ready (after signup or if already logged in)
+  useEffect(() => {
+    if (user && profile) {
+      navigate(profile.role === "farmer" ? "/farmer" : "/marketplace");
+    }
+  }, [user, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,8 +36,6 @@ const Auth = () => {
         }
         await signUp(email, password, { name, role, phone });
         toast.success("Account created! Welcome to AgriLink 🌾");
-        // Small delay for profile creation trigger
-        setTimeout(() => navigate(role === "farmer" ? "/farmer" : "/marketplace"), 500);
       } else {
         if (!email.trim() || !password.trim()) {
           toast.error("Enter your email and password");
@@ -38,7 +43,6 @@ const Auth = () => {
         }
         await signIn(email, password);
         toast.success("Welcome back! 🌾");
-        navigate(role === "farmer" ? "/farmer" : "/marketplace");
       }
     } catch (err: any) {
       toast.error(err.message || "Authentication failed");
