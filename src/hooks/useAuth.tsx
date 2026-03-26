@@ -51,7 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => fetchProfile(session.user.id), 100);
+          // Delay to allow profile creation trigger to complete
+          setTimeout(() => fetchProfile(session.user.id), 500);
         } else {
           setProfile(null);
         }
