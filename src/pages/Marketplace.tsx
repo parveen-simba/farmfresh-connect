@@ -108,8 +108,13 @@ const Marketplace = () => {
             {filtered.map((p, i) => {
               const freshness = freshnessLabel(p.harvest_date);
               return (
-                <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} onClick={() => navigate(`/product/${p.id}`)} className="bg-card rounded-xl p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-                  <div className="text-4xl mb-2">{getCategoryEmoji(p.category)}</div>
+                <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} onClick={() => navigate(`/product/${p.id}`)} className="bg-card rounded-xl overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                  {p.image_url ? (
+                    <img src={p.image_url} alt={p.name} className="w-full h-32 object-cover" />
+                  ) : (
+                    <div className="w-full h-32 bg-muted flex items-center justify-center text-4xl">{getCategoryEmoji(p.category)}</div>
+                  )}
+                  <div className="p-3">
                   <h3 className="font-semibold text-foreground text-sm">{p.name}</h3>
                   {p.name_hi && <p className="text-xs text-muted-foreground">{p.name_hi}</p>}
                   <p className="text-lg font-bold text-primary mt-1">{formatPrice(p.price)}<span className="text-xs text-muted-foreground font-normal">/{p.unit}</span></p>
@@ -119,6 +124,7 @@ const Marketplace = () => {
                     <span className="truncate">{p.location_address || "India"}</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">by {p.farmer_name}</p>
+                  </div>
                 </motion.div>
               );
             })}

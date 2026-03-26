@@ -100,7 +100,11 @@ const ProductDetail = () => {
 
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="px-4">
         <div className="bg-card rounded-2xl p-6 shadow-sm text-center mb-4">
-          <div className="text-6xl mb-3">{getCategoryEmoji(product.category)}</div>
+          {product.image_url ? (
+            <img src={product.image_url} alt={product.name} className="w-full h-56 object-cover rounded-xl mb-3" />
+          ) : (
+            <div className="text-6xl mb-3">{getCategoryEmoji(product.category)}</div>
+          )}
           <h1 className="text-2xl font-bold text-foreground">{product.name}</h1>
           {product.name_hi && <p className="text-muted-foreground">{product.name_hi}</p>}
           <p className="text-3xl font-extrabold text-primary mt-2">{formatPrice(product.price)}<span className="text-base text-muted-foreground font-normal">/{product.unit}</span></p>
