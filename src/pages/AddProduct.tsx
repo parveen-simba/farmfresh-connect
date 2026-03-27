@@ -178,9 +178,41 @@ const AddProduct = () => {
       </button>
 
       <h1 className="text-2xl font-bold text-foreground mb-1">Add Product</h1>
-      <p className="text-muted-foreground text-sm mb-6">उत्पाद जोड़ें</p>
+      <p className="text-muted-foreground text-sm mb-4">उत्पाद जोड़ें</p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Voice Input */}
+      <div className="mb-6 p-4 rounded-2xl bg-card border border-border">
+        <p className="text-sm font-medium text-foreground mb-2">🎙️ Voice Input / बोलकर जोड़ें</p>
+        <p className="text-xs text-muted-foreground mb-3">
+          Speak in Hindi: e.g. "10 kilo tamatar 20 rupaye per kilo"
+        </p>
+        {voiceTranscript && (
+          <p className="text-sm text-foreground bg-muted rounded-lg p-2 mb-3 italic">"{voiceTranscript}"</p>
+        )}
+        <div className="flex gap-2">
+          {!isListening ? (
+            <Button
+              type="button"
+              onClick={startListening}
+              disabled={isParsing}
+              variant="outline"
+              className="flex-1 h-12 rounded-xl gap-2"
+            >
+              {isParsing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mic className="w-5 h-5" />}
+              {isParsing ? "Parsing..." : "Start Speaking"}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={stopAndParse}
+              className="flex-1 h-12 rounded-xl gap-2 bg-destructive text-destructive-foreground animate-pulse"
+            >
+              <MicOff className="w-5 h-5" />
+              Stop & Fill Form
+            </Button>
+          )}
+        </div>
+      </div>
         {/* Image Upload */}
         <div>
           <label className="text-sm font-medium text-foreground mb-2 block">Product Photo</label>
