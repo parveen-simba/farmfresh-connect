@@ -29,6 +29,80 @@ const AddProduct = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const recognitionRef = useRef<any>(null);
+
+  const startListening = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Voice input not supported in this browser");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "hi-IN";
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join(" ");
+      setVoiceTranscript(transcript);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onerror = (e: any) => {
+      console.error("Speech error:", e.error);
+      setIsListening(false);
+      if (e.error === "not-allowed") {
+        toast.error("Microphone access denied");
+      }
+    };
+
+    setVoiceTranscript("");
+    setIsListening(true);
+    recognition.start();
+  }, []);
+
+  const stopAndParse = useCallback(async () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsListening(false);
+
+    const transcript = voiceTranscript.trim();
+    if (!transcript) {
+      toast.error("No speech detected, try again");
+      return;
+    }
+
+    setIsParsing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("parse-voice-product", {
+        body: { transcript },
+      });
+      if (error) throw error;
+      const p = data.product;
+      if (p.name) setName(p.name);
+      if (p.price) setPrice(String(p.price));
+      if (p.quantity) setQuantity(String(p.quantity));
+      if (p.unit) setUnit(p.unit);
+      if (p.category) setCategory(p.category);
+      toast.success("Voice input parsed! ✅ Check the fields below.");
+    } catch (e: any) {
+      console.error("Parse error:", e);
+      toast.error("Could not parse voice input, please fill manually");
+    } finally {
+      setIsParsing(false);
+      setVoiceTranscript("");
+    }
+  }, [voiceTranscript]);
 
   useEffect(() => {
     if (!loading && !user) {
