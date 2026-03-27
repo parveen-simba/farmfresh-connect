@@ -125,7 +125,7 @@ const FarmerMap = () => {
     return [20.5937, 78.9629]; // center of India
   }, [farmers]);
 
-  if (loading) return null;
+  
 
   return (
     <div className="h-screen flex flex-col bg-background">
