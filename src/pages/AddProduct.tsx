@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Camera, X } from "lucide-react";
+import { ArrowLeft, Camera, X, Mic, MicOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const categories = [
