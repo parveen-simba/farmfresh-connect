@@ -213,6 +213,8 @@ const AddProduct = () => {
           )}
         </div>
       </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Image Upload */}
         <div>
           <label className="text-sm font-medium text-foreground mb-2 block">Product Photo</label>
