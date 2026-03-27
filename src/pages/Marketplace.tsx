@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, getCategoryEmoji, freshnessLabel } from "@/lib/helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, LogOut, MapPin, ClipboardList } from "lucide-react";
+import { Search, LogOut, MapPin, ClipboardList, Map } from "lucide-react";
 import { motion } from "framer-motion";
 
 const categories = ["all", "vegetables", "fruits", "grains", "dairy", "spices"];
@@ -60,6 +60,9 @@ const Marketplace = () => {
             <h1 className="text-xl font-bold">{profile.name}</h1>
           </div>
           <div className="flex gap-2">
+            <Button variant="ghost" size="icon" className="text-secondary-foreground hover:bg-secondary-foreground/10" onClick={() => navigate("/map")} title="Map view">
+              <Map className="w-5 h-5" />
+            </Button>
             <Button variant="ghost" size="icon" className="text-secondary-foreground hover:bg-secondary-foreground/10" onClick={() => setShowOrders(!showOrders)}>
               <ClipboardList className="w-5 h-5" />
             </Button>
