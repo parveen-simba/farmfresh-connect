@@ -98,11 +98,10 @@ const FarmerMap = () => {
       if (!map.has(p.farmer_id)) {
         locIndex++;
         map.set(p.farmer_id, {
-        map.set(p.farmer_id, {
           farmer_id: p.farmer_id,
           farmer_name: p.farmer_name,
-          location_lat: p.location_lat,
-          location_lng: p.location_lng,
+          location_lat: lat,
+          location_lng: lng,
           location_address: p.location_address || "",
           products: [],
         });
