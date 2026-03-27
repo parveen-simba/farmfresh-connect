@@ -62,7 +62,7 @@ function RecenterButton() {
 
 const FarmerMap = () => {
   const navigate = useNavigate();
-  const { loading } = useAuth();
+  const [products, setProducts] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
