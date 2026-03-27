@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Camera, X } from "lucide-react";
+import { ArrowLeft, Camera, X, Mic, MicOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const categories = [
@@ -29,6 +29,80 @@ const AddProduct = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const recognitionRef = useRef<any>(null);
+
+  const startListening = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Voice input not supported in this browser");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "hi-IN";
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join(" ");
+      setVoiceTranscript(transcript);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onerror = (e: any) => {
+      console.error("Speech error:", e.error);
+      setIsListening(false);
+      if (e.error === "not-allowed") {
+        toast.error("Microphone access denied");
+      }
+    };
+
+    setVoiceTranscript("");
+    setIsListening(true);
+    recognition.start();
+  }, []);
+
+  const stopAndParse = useCallback(async () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsListening(false);
+
+    const transcript = voiceTranscript.trim();
+    if (!transcript) {
+      toast.error("No speech detected, try again");
+      return;
+    }
+
+    setIsParsing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("parse-voice-product", {
+        body: { transcript },
+      });
+      if (error) throw error;
+      const p = data.product;
+      if (p.name) setName(p.name);
+      if (p.price) setPrice(String(p.price));
+      if (p.quantity) setQuantity(String(p.quantity));
+      if (p.unit) setUnit(p.unit);
+      if (p.category) setCategory(p.category);
+      toast.success("Voice input parsed! ✅ Check the fields below.");
+    } catch (e: any) {
+      console.error("Parse error:", e);
+      toast.error("Could not parse voice input, please fill manually");
+    } finally {
+      setIsParsing(false);
+      setVoiceTranscript("");
+    }
+  }, [voiceTranscript]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -104,7 +178,41 @@ const AddProduct = () => {
       </button>
 
       <h1 className="text-2xl font-bold text-foreground mb-1">Add Product</h1>
-      <p className="text-muted-foreground text-sm mb-6">उत्पाद जोड़ें</p>
+      <p className="text-muted-foreground text-sm mb-4">उत्पाद जोड़ें</p>
+
+      {/* Voice Input */}
+      <div className="mb-6 p-4 rounded-2xl bg-card border border-border">
+        <p className="text-sm font-medium text-foreground mb-2">🎙️ Voice Input / बोलकर जोड़ें</p>
+        <p className="text-xs text-muted-foreground mb-3">
+          Speak in Hindi: e.g. "10 kilo tamatar 20 rupaye per kilo"
+        </p>
+        {voiceTranscript && (
+          <p className="text-sm text-foreground bg-muted rounded-lg p-2 mb-3 italic">"{voiceTranscript}"</p>
+        )}
+        <div className="flex gap-2">
+          {!isListening ? (
+            <Button
+              type="button"
+              onClick={startListening}
+              disabled={isParsing}
+              variant="outline"
+              className="flex-1 h-12 rounded-xl gap-2"
+            >
+              {isParsing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mic className="w-5 h-5" />}
+              {isParsing ? "Parsing..." : "Start Speaking"}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={stopAndParse}
+              className="flex-1 h-12 rounded-xl gap-2 bg-destructive text-destructive-foreground animate-pulse"
+            >
+              <MicOff className="w-5 h-5" />
+              Stop & Fill Form
+            </Button>
+          )}
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Image Upload */}
