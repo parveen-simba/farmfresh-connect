@@ -62,13 +62,9 @@ function RecenterButton() {
 
 const FarmerMap = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-
-  useEffect(() => {
-    if (!loading && !user) navigate("/auth?role=buyer");
-  }, [loading, user]);
 
   useEffect(() => {
     const fetchProducts = async () => {
