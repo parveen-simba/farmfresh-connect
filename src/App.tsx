@@ -9,6 +9,7 @@ import FarmerDashboard from "./pages/FarmerDashboard";
 import AddProduct from "./pages/AddProduct";
 import Marketplace from "./pages/Marketplace";
 import ProductDetail from "./pages/ProductDetail";
+import FarmerMap from "./pages/FarmerMap";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
