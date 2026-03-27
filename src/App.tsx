@@ -27,6 +27,7 @@ const App = () => (
             <Route path="/farmer/add-product" element={<AddProduct />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/map" element={<FarmerMap />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
