@@ -128,9 +128,9 @@ const FarmerMap = () => {
   
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-background" style={{ height: "100vh" }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border z-[1001] relative">
+      <div className="flex items-center justify-between px-4 py-3 bg-card border-b border-border z-[1001] relative" style={{ flexShrink: 0 }}>
         <button onClick={() => navigate("/marketplace")} className="flex items-center gap-2 text-muted-foreground">
           <ArrowLeft className="w-5 h-5" /> Back
         </button>
@@ -146,7 +146,7 @@ const FarmerMap = () => {
       </div>
 
       {/* Map */}
-      <div className="flex-1 relative">
+      <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
         {dataLoading ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-muted-foreground">Loading map…</p>
@@ -156,7 +156,7 @@ const FarmerMap = () => {
             center={center}
             zoom={farmers.length > 0 ? 10 : 5}
             scrollWheelZoom
-            className="h-full w-full z-0"
+            style={{ height: "100%", width: "100%" }}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
