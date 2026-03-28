@@ -10,6 +10,7 @@ import AddProduct from "./pages/AddProduct";
 import Marketplace from "./pages/Marketplace";
 import ProductDetail from "./pages/ProductDetail";
 import FarmerMap from "./pages/FarmerMap";
+import EditProfile from "./pages/EditProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/map" element={<FarmerMap />} />
+            <Route path="/farmer/edit-profile" element={<EditProfile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
