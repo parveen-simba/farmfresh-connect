@@ -15,9 +15,9 @@ const Marketplace = () => {
   const { user, profile, signOut, loading } = useAuth();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [showOrders, setShowOrders] = useState(false);
+  
   const [products, setProducts] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
+  
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -32,12 +32,8 @@ const Marketplace = () => {
 
   const fetchData = async () => {
     setDataLoading(true);
-    const [productsRes, ordersRes] = await Promise.all([
-      supabase.from("products").select("*").order("created_at", { ascending: false }),
-      supabase.from("orders").select("*").eq("buyer_id", user!.id).order("created_at", { ascending: false }),
-    ]);
-    setProducts(productsRes.data || []);
-    setOrders(ordersRes.data || []);
+    const { data } = await supabase.from("products").select("*").order("created_at", { ascending: false });
+    setProducts(data || []);
     setDataLoading(false);
   };
 
@@ -63,7 +59,7 @@ const Marketplace = () => {
             <Button variant="ghost" size="icon" className="text-secondary-foreground hover:bg-secondary-foreground/10" onClick={() => navigate("/map")} title="Map view">
               <Map className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-secondary-foreground hover:bg-secondary-foreground/10" onClick={() => setShowOrders(!showOrders)}>
+            <Button variant="ghost" size="icon" className="text-secondary-foreground hover:bg-secondary-foreground/10" onClick={() => navigate("/orders")}>
               <ClipboardList className="w-5 h-5" />
             </Button>
             <Button variant="ghost" size="icon" className="text-secondary-foreground hover:bg-secondary-foreground/10" onClick={async () => { await signOut(); navigate("/"); }}>
@@ -79,25 +75,6 @@ const Marketplace = () => {
 
       {dataLoading ? (
         <p className="text-center text-muted-foreground py-12">Loading...</p>
-      ) : showOrders ? (
-        <div className="px-4 mt-4 space-y-3">
-          <h2 className="text-lg font-bold text-foreground">My Orders</h2>
-          {orders.length === 0 && <p className="text-muted-foreground text-center py-8">No orders yet</p>}
-          {orders.map((o) => (
-            <div key={o.id} className="bg-card rounded-xl p-4 shadow-sm">
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-foreground">{o.product_name}</h3>
-                <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                  o.status === "pending" ? "bg-secondary/20 text-secondary" :
-                  o.status === "accepted" ? "bg-primary/20 text-primary" :
-                  o.status === "rejected" ? "bg-destructive/20 text-destructive" :
-                  "bg-accent text-accent-foreground"
-                }`}>{o.status}</span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">From: {o.farmer_name} • {o.quantity} units • {formatPrice(o.total_price)}</p>
-            </div>
-          ))}
-        </div>
       ) : (
         <>
           <div className="flex gap-2 px-4 mt-4 overflow-x-auto pb-2">
