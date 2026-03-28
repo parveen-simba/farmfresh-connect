@@ -5,6 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/helpers";
 import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck } from "lucide-react";
+import { motion } from "framer-motion";
 
 const statusConfig: Record<string, { label: string; icon: typeof Clock; className: string }> = {
   pending: { label: "Pending", icon: Clock, className: "bg-secondary/15 text-secondary border-secondary/20" },
@@ -26,6 +29,52 @@ const BuyerOrders = () => {
 
   useEffect(() => {
     if (user) fetchOrders();
+  }, [user]);
+
+  // Realtime subscription for order status changes
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("buyer-orders-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "orders",
+          filter: `buyer_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updated = payload.new as any;
+          setOrders((prev) =>
+            prev.map((o) => (o.id === updated.id ? { ...o, ...updated } : o))
+          );
+          if (updated.status === "accepted") {
+            toast.success(`Order "${updated.product_name}" accepted! 🎉`);
+          } else if (updated.status === "rejected") {
+            toast.error(`Order "${updated.product_name}" was rejected`);
+          } else if (updated.status === "delivered") {
+            toast.success(`Order "${updated.product_name}" delivered! 📦`);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "orders",
+          filter: `buyer_id=eq.${user.id}`,
+        },
+        (payload) => {
+          setOrders((prev) => [payload.new as any, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const fetchOrders = async () => {
