@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, getCategoryEmoji, freshnessLabel } from "@/lib/helpers";
 import { Button } from "@/components/ui/button";
-import { Plus, Package, ClipboardList, LogOut, Check, X, Trash2 } from "lucide-react";
+import { Plus, Package, ClipboardList, LogOut, Check, X, Trash2, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -61,9 +61,14 @@ const FarmerDashboard = () => {
             <p className="text-sm opacity-80">नमस्ते 🙏</p>
             <h1 className="text-xl font-bold">{profile.name}</h1>
           </div>
-          <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={async () => { await signOut(); navigate("/"); }}>
-            <LogOut className="w-5 h-5" />
-          </Button>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate("/farmer/edit-profile")}>
+              <UserCog className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={async () => { await signOut(); navigate("/"); }}>
+              <LogOut className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-primary-foreground/15 rounded-xl p-3 text-center">
