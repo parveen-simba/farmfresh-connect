@@ -6,8 +6,6 @@ import { formatPrice } from "@/lib/helpers";
 import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { ArrowLeft, Package, Clock, CheckCircle, XCircle, Truck } from "lucide-react";
-import { motion } from "framer-motion";
 
 const statusConfig: Record<string, { label: string; icon: typeof Clock; className: string }> = {
   pending: { label: "Pending", icon: Clock, className: "bg-secondary/15 text-secondary border-secondary/20" },
