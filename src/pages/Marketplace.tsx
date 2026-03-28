@@ -63,7 +63,7 @@ const Marketplace = () => {
             <Button variant="ghost" size="icon" className="text-secondary-foreground hover:bg-secondary-foreground/10" onClick={() => navigate("/map")} title="Map view">
               <Map className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-secondary-foreground hover:bg-secondary-foreground/10" onClick={() => setShowOrders(!showOrders)}>
+            <Button variant="ghost" size="icon" className="text-secondary-foreground hover:bg-secondary-foreground/10" onClick={() => navigate("/orders")}>
               <ClipboardList className="w-5 h-5" />
             </Button>
             <Button variant="ghost" size="icon" className="text-secondary-foreground hover:bg-secondary-foreground/10" onClick={async () => { await signOut(); navigate("/"); }}>
